@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "global.h"
 #include "scan.h"
 
 char *stateTypeStr[] = {"START", "END", "INT", "INT_DEC", "INT_EXPECT_HEX", "INT_HEX", "CHAR", "CHAR_EXPECT_QUOTE", "ESCAPE_CHAR", "STRING", "STRING_ESCAPE_CHAR", "ID", "OP", "COND_OP", "COMMENT", "DELIMIT"};

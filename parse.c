@@ -3,25 +3,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "global.h"
 #include "scan.h"
+#include "parse.h"
 
 #define STMT_PRODUCTIONS 8
 
 int expr();
 
-struct sourceReadState{
-    int lineNo;
-    int linePos;
-    char lineBuffer[MAX_STR_LEN];
-    char tokenString[MAX_STR_LEN];
-    TokenType nextTok;
-    fpos_t pos;
-}readState;
+TreeNode *newNode(char *tokenStr, TokenType token){
+    TreeNode *t = malloc(sizeof(TreeNode));
+    if(t == NULL)
+	printf("Out of memory error at line %d\n",lineNo);
+    else{
+	int i;
+	for(i = 0; i < MAXCHILDREN; i++) t->child = NULL;
+	t->sibling = NULL;
+	t->lineNo = lineNo;
+	t->tokenStr = tokenStr;
+	t->token = token;
+    }
+    return t;
+}
 
-typedef struct sourceReadState srcRdState;
-
-TokenType next;
-int showErrMsg = 1;
+TreeNode *tree;
+TreeNode *currentNode;
 
 srcRdState createRestorePoint(){
     readState.lineNo = lineNo;
@@ -64,11 +70,10 @@ int expect(TokenType token, char *tokenStr, char *expectedType){
     int matched = match(token, tokenStr);
     if(!matched) {
 	if(tokenStr == NULL)
-	    printf("\nError at line : %d:%d\texpected : %s\tfound : %s\n", lineNo, linePos, expectedType, tokenString);
+	    printf("\nError at line : %d:%d\texpected : %s\tfound : %s\n\n", lineNo, linePos, expectedType, tokenString);
 	else
-	    printf("\nError at line : %d:%d\texpected : %s\tfound : %s\n", lineNo, linePos, tokenStr, tokenString);
-	exit(EXIT_FAILURE);
-	
+	    printf("\nError at line : %d:%d\texpected : %s\tfound : %s\n\n", lineNo, linePos, tokenStr, tokenString);
+	//exit(EXIT_FAILURE);
     }
     return matched;
 }
@@ -77,8 +82,8 @@ int errorIfNotMatch(int (*fp)(), char *expected){
     srcRdState rdState = createRestorePoint();
     if(!fp()){
 	backtrack(rdState);
-	printf("\nError at line : %d:%d\texpected : %s\tfound : %s\n", lineNo, linePos, expected, tokenString);
-	exit(EXIT_FAILURE);
+	printf("\nError at line : %d:%d\texpected : %s\tfound : %s\n\n", lineNo, linePos, expected, tokenString);
+	//exit(EXIT_FAILURE);
     }
     return 1;
 }
@@ -354,14 +359,8 @@ int program(){
     expect(DELIMITER, "}", NULL);
 }    
 
-int main(int argc, char *argv[]){
-    openSourceFile(argv[1]);
-    strcpy(sourceFileName, argv[1]);
-    
+int parse(){
     next = getToken();
     program();
-    
-    fclose(source);
-    
     return 0;
 }
