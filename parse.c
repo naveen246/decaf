@@ -26,7 +26,7 @@ TreeNode *newNode(char *tokenStr, TokenType token){
     return t;
 }
 
-TreeNode *tree;
+
 TreeNode *currentNode;
 
 srcRdState createRestorePoint(){
@@ -116,17 +116,12 @@ int var(){
     return matched;
 }
 
-int varRepeat(){
-    int matched = matchAtleastOnce(&var);
-    return matched;
-}
-
 int type(){
     return match(KEYWORD, "int") || match(KEYWORD, "boolean");
 }    
     
 int fieldDecl(){
-    return type() && varRepeat() && expect(DELIMITER, ";", NULL);
+    return type() && matchAtleastOnce(&var) && expect(DELIMITER, ";", NULL);
 }
 
 int varDecl(){
@@ -253,15 +248,15 @@ int assignOp(){
 	|| match(OPERATOR, "-=");
 }
 
-int stmt1(){
+int stmtAssign(){
     return location() && assignOp() && expr() && expect(DELIMITER, ";", NULL);
 }
 
-int stmt2(){
+int stmtMethodCall(){
     return methodCall() && expect(DELIMITER, ";", NULL);
 }
 
-int stmt3(){
+int stmtIf(){
     int matched = match(KEYWORD, "if")
                && expect(DELIMITER, "(", NULL)
 	       && errorIfNotMatch(&expr, "expression")
@@ -272,7 +267,7 @@ int stmt3(){
     return matched;       
 }
 
-int stmt4(){
+int stmtFor(){
     int matched = match(KEYWORD, "for")
                && expect(IDENTIFIER, NULL, "identifier")
 	       && expect(OPERATOR, "=", NULL)
@@ -283,7 +278,7 @@ int stmt4(){
     return matched;
 }
 
-int stmt5(){
+int stmtReturn(){
     int matched = match(KEYWORD, "return");
     if(matched && !match(DELIMITER, ";")){
 	matched = errorIfNotMatch(&expr, "expression")
@@ -292,22 +287,22 @@ int stmt5(){
     return matched;
 }
 
-int stmt6(){
+int stmtBreak(){
     return match(KEYWORD, "break") && expect(DELIMITER, ";", NULL);
 }
 
-int stmt7(){
+int stmtContinue(){
     return match(KEYWORD, "continue") && expect(DELIMITER, ";", NULL);
 }
 
-int stmt8(){
+int stmtBlock(){
     return block();
     
 }
 
 int statement(){
     int matched = 0;
-    int (*fpArr[STMT_PRODUCTIONS])() = {stmt1, stmt2, stmt3, stmt4, stmt5, stmt6, stmt7, stmt8};
+    int (*fpArr[STMT_PRODUCTIONS])() = {stmtAssign, stmtMethodCall, stmtIf, stmtFor, stmtReturn, stmtBreak, stmtContinue, stmtBlock};
     int i;
     for(i = 0; i < STMT_PRODUCTIONS; i++){
 	srcRdState rdState = createRestorePoint();
@@ -360,6 +355,7 @@ int program(){
 }    
 
 int parse(){
+    TreeNode *tree;
     next = getToken();
     program();
     return 0;

@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "global.h"
 #include "scan.h"
 
 void diffTest(char *fileName){
